@@ -1,50 +1,71 @@
 import math
+from tkinter import *
 
-matrixOfCoordinates = []  # Создаем матрицу координат из файла с координатами
+# Создаем матрицу координат из файла с координатами
+matrixOfCoordinates = []
 with open("coordinatePoint.txt", 'r') as file:
     for line in file:
         if line.strip():  # strip удаляет все стандартные(пробелы, табуляции)символы в начале и конце строки
             matrixOfCoordinates += [line.strip().split(" ")]
 
-count_dots = len(matrixOfCoordinates)  # Число точек
+# Число точек
+count_dots = len(matrixOfCoordinates)
 
-print("Матрица координат:")  # Выводим матрицу координат в консоль
+# Выводим матрицу координат в консоль
+print("Матрица координат:")
 
-for i in range(count_dots):  # Переводим координаты из строк в числа
+# Меняем тип координат из строки в число
+for i in range(count_dots):
     print("")
     for j in range(2):
         matrixOfCoordinates[i][j] = float(matrixOfCoordinates[i][j])
         print(matrixOfCoordinates[i][j], end=' ')
 print("\n")
+
+# Сохраняем матрицу в итоговый файл
+with open('resultData.txt', 'w') as fileResult:
+    fileResult.write("Матрица кординат:\n")
+    for row in matrixOfCoordinates:
+        fileResult.write(' '.join([str(a) for a in row]) + '\n')
+    fileResult.write("\nЧисло потребителей: " + str(count_dots))
 print("Число вершин:", count_dots)
 
 
-def distance(p1, p2):  # Функция считает расстояние между точками
-    result = math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)  # Координаты двух точек считаются по формуле
-    result = float("{0:.1f}".format(result))
-    return result
+# Функция считает расстояние между точками
+def distance(p1, p2):
+    resultDistance = math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2)
+    resultDistance = float("{0:.1f}".format(resultDistance))
+    return resultDistance
 
 
+# Формируем матрица расстояний между точками
 dis = 0
 matrixOfDistance = []
 n = count_dots
-for v in range(0, n):  # Формируется матрица расстояний между точками
+for v in range(0, n):
     matrixOfDistance.append([])
     for k in range(0, count_dots):
         dis = distance(matrixOfCoordinates[v], matrixOfCoordinates[k])
         matrixOfDistance[v].append(dis)
 
+# Вывод матрицы расстояний на экран
 print("Матрица расстояний: ")
-for i in range(len(matrixOfDistance)):  # Вывод матрицы расстояний на экран
+for i in range(len(matrixOfDistance)):
     print("")
     for j in range(len(matrixOfDistance)):
         print(matrixOfDistance[i][j], end=' ')
 
+# Сохраняем матрицу расстояний в итоговый файл
+with open('resultData.txt', 'a') as fileResult:
+    fileResult.write("\nМатрица расстояний:\n")
+    for row in matrixOfDistance:
+        fileResult.write(' '.join([str(a) for a in row]) + '\n')
 print("")
 
 
-############################
+# ----------------------------------------------
 
+# Ищем порядок пути и его длину алгоритмом Литтла
 # Функция нахождения минимального элемента, исключая текущий элемент
 def Min(lst, myindex):
     return min(x for idx, x in enumerate(lst) if idx != myindex)
@@ -132,15 +153,14 @@ for i in range(0, len(res) - 1, 2):
             result.append(res[j])
             result.append(res[j + 1])
 # Выстраиваем правильный порядок пути
-r = []
+order = []
 for i in result:
-    if i not in r:
-        r.append(i)
-r.insert(0, 1)
+    if i not in order:
+        order.append(i)
+order.insert(0, 1)
 
 print("----------------------------------")
-# print("Порядок пути: ", result)
-print("Порядок пути: ", r[::-1])
+print("Порядок пути: ", order[::-1])
 
 # Считаем длину пути
 for i in range(0, len(result) - 1, 2):
@@ -151,14 +171,65 @@ for i in range(0, len(result) - 1, 2):
         PathLenght += StartMatrix[result[i] - 1][result[i + 1] - 1]
 PathLenght = float("{0:.1f}".format(PathLenght))
 print("Длина пути: ", PathLenght)
+PathLenght = str(PathLenght)
 print("----------------------------------")
 
-#################
+# Добавляем порядок и длину пути в конечный файл
+pathOrder = order[::-1]
+with open('resultData.txt', 'a') as fileResult:
+    fileResult.write("\nПорядок пути: " + str(pathOrder))
+    fileResult.write("\nДлина пути: " + PathLenght)
 
-pathOrder = []
-pathOrder = r[::-1]
-print("PathOrder: ", pathOrder)
+# ----------------------------------------------
 
-print(matrixOfCoordinates)
+# Выводим на экран и рисуем схему соединения потребителей
+window = Tk()
+canva = Canvas(window, width=300, height=300, bg="white")
 
+
+# Функция рисования линии
+def drawLine(p1, p2, canva):
+    x1 = int(p1[0] * 30)
+    y1 = int(p1[1] * 30)
+    x2 = int(p2[0] * 30)
+    y2 = int(p2[1] * 30)
+    result1 = canva.create_line(x1, y1, x2, y2)  # Команда на отрисовку линии
+    return result1
+
+
+# Алгоритм проходит по матрице координат в порядке списка пути
+x = 0
+for n in range(0, len(pathOrder)):
+    if x != len(pathOrder) - 2:
+        x = n
+        y = n + 1
+        drawL = drawLine(matrixOfCoordinates[x], matrixOfCoordinates[y], canva)
+        x += 1
+    else:
+        x = n
+        y = 0
+        drawL = drawLine(matrixOfCoordinates[x], matrixOfCoordinates[y], canva)
+        break
+
+canva.pack()
+lab = Label(window, text="Схема соединения потребителей между собой", font="Arial 16")
+lab.pack()
+
+window.minsize(width=800, height=500)
+Button(window, text="Получить данные", command=window.destroy).pack()
+window.mainloop()
+
+fileResult.close()
 file.close()
+
+
+'''fileResult.write("\nМатрица кординат:\n")
+    for row in matrixOfCoordinates:
+        fileResult.write(' '.join([str(a) for a in row]) + '\n')'''
+
+# Сохраняем матрицу расстояний в итоговый файл
+'''
+with open('resultData.txt', 'a') as fileResult:
+    fileResult.write("\nМатрица расстояний:\n")
+    for row in matrixOfDistance:
+        fileResult.write(' '.join([str(a) for a in row]) + '\n')'''
